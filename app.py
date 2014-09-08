@@ -226,13 +226,14 @@ def get_file(session_id, filename):
 
 @celery.task(name='tasks.batch_tsne')
 def batch_tsne(fnames, email, job_id):
-	sample = 100
+	sample = 5000
 	fdarray = []
 	for fname in fnames:
 		fdarray.append(fml.FlowData(fname))
 
+
 	fml.tsne(fdarray, 'visne', sample = sample, verbose = True)
-	
+
 	for fd, fname in zip(fdarray, fnames):
 		fd.fcs_export(fname)
 
@@ -244,6 +245,7 @@ def batch_tsne(fnames, email, job_id):
 		for f in files:
 			if f.endswidth('.fcs'):
 				zipf.write(os.path.join(root,file))
+	zipf.close()
 
 	# send an email to announce completion
 	msg = Message("Your t-SNE run is complete.", recipients = [email])
