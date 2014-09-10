@@ -87,12 +87,15 @@
         </div>
         <div class="panel-body">
             <ul>
-                <li>The maximum file size for uploads in this demo is <strong>50 MB</strong> (default file size is unlimited).</li>
-                <li>Only image files (<strong>TXT, JPG, GIF, PNG, BMP, RAR, ZIP, 7ZIP, DOC, DOCX</strong>) are allowed in this website.</li>
-                
                 <li>You can <strong>drag &amp; drop</strong> files from your desktop on this webpage (see <a href="https://github.com/blueimp/jQuery-File-Upload/wiki/Browser-support">Browser support</a>).</li>
-                <li>Please refer to the <a href="https://github.com/blueimp/jQuery-File-Upload">project website</a> and <a href="https://github.com/blueimp/jQuery-File-Upload/wiki">documentation</a> for more information.</li>
-                <li>Built with Twitter's <a href="http://twitter.github.com/bootstrap/">Bootstrap</a> CSS framework and Icons from <a href="http://glyphicons.com/">Glyphicons</a>.</li>
+                <li>Only <strong>FCS</strong> under <strong>50MB</strong> can be uploaded.</li>
+                <li>We only support data coming off the CyTOF where each isotope corresponds to the 
+					same antibody.  Support for conventional flow comming soon.</li>
+                <li>Built with Twitter's <a href="http://twitter.github.com/bootstrap/">Bootstrap</a> CSS framework,
+					 Icons from <a href="http://glyphicons.com/">Glyphicons</a>,
+					 and <a href="https://github.com/blueimp/jQuery-File-Upload">jQuery-File-Upload</a>.
+				</li>
+			</li>
             </ul>
         </div>
     </div>
@@ -192,15 +195,15 @@
 <!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
 <script src="/static/js/vendor/jquery.ui.widget.js"></script>
 <!-- The Templates plugin is included to render the upload/download listings -->
-<script src="http://blueimp.github.io/JavaScript-Templates/js/tmpl.min.js"></script>
+<script src="/static/js/tmpl.min.js"></script>
 <!-- The Load Image plugin is included for the preview images and image resizing functionality -->
-<script src="http://blueimp.github.io/JavaScript-Load-Image/js/load-image.min.js"></script>
+<script src="/static/js/load-image.min.js"></script>
 <!-- The Canvas to Blob plugin is included for image resizing functionality -->
-<script src="http://blueimp.github.io/JavaScript-Canvas-to-Blob/js/canvas-to-blob.min.js"></script>
+<script src="/static/js/canvas-to-blob.min.js"></script>
 <!-- Bootstrap JS is not required, but included for the responsive demo navigation -->
 <!-- <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script> -->
 <!-- blueimp Gallery script -->
-<script src="http://blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
+<script src="/static/js/jquery.blueimp-gallery.min.js"></script>
 <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
 <script src="/static/js/jquery.iframe-transport.js"></script>
 <!-- The basic File Upload plugin -->

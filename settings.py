@@ -13,4 +13,4 @@ MAIL_DEFAULT_SENDER = 'flowml@hokanson.us'
 MAIL_USE_TLS = False
 MAIL_USE_SSL = True
 MAIL_SUPPRESS_SEND = False
-EXTERNAL_URL_BASE = 'http://flowml.mdanderson.edu/'
+EXTERNAL_URL_BASE = 'http://flowml.mdanderson.edu'
