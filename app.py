@@ -16,12 +16,19 @@ from __future__ import absolute_import
 import os
 import time
 import zipfile
+try:
+    import zlib
+    compression = zipfile.ZIP_DEFLATED
+except:
+    compression = zipfile.ZIP_STORED
+
 from os import listdir
 from os.path import isfile, join
 import json
 import simplejson
 from flask import Flask, Blueprint, abort, jsonify, request, render_template, \
-	session, redirect, url_for, flash, send_from_directory, make_response
+	session, redirect, url_for, flash, send_from_directory, make_response, \
+	send_from_directory
 from flask.ext.bootstrap import Bootstrap
 from flask_mail import Mail, Message
 from werkzeug import secure_filename
@@ -226,30 +233,43 @@ def get_file(session_id, filename):
 
 @celery.task(name='tasks.batch_tsne')
 def batch_tsne(fnames, email, job_id):
-	sample = 5000
+	app.logger.setLevel(logging.INFO)
+	sample = int(100)
 	fdarray = []
 	for fname in fnames:
 		fdarray.append(fml.FlowData(fname))
 
 
 	fml.tsne(fdarray, 'visne', sample = sample, verbose = True)
-
+	app.logger.info("JOB {}: t-SNE done".format(job_id))
 	for fd, fname in zip(fdarray, fnames):
+		fd._metadata['flowml-version'] = str(0.2)
+		fd._metadata['flowml-samples'] = str(sample)
 		fd.fcs_export(fname)
+	app.logger.info("JOB {}: files written".format(job_id))
 
+	
 	# zip the files together to be mailed
-	zipfilename = 'tsne.zip'
-	zipf = zipfile.ZipFile(zipfilename,'w')
-	path = join(fnames[0], os.pardir)
+	path = os.path.abspath(join(fnames[0], os.pardir))
+	print path
+	zipbasename = 'tsne.zip'
+	zipfilename = join(path, zipbasename)
+	zipf = zipfile.ZipFile(zipfilename, mode = 'w')
 	for root, dirs, files in os.walk(path):
 		for f in files:
-			if f.endswidth('.fcs'):
-				zipf.write(os.path.join(root,file))
+			if f.endswith('.fcs'):
+				print join(path,f)	
+				#zipf.write(os.path.join(root,file), compress_type = compression)
+				zipf.write(join(path,f), arcname = f, compress_type = compression)
+				app.logger.info("JOB {}: file {} written".format(job_id,f))
 	zipf.close()
+	app.logger.info("JOB {}: Zip file written".format(job_id))
 
 	# send an email to announce completion
 	msg = Message("Your t-SNE run is complete.", recipients = [email])
-	url = app.config['EXTERNAL_URL_BASE'] + 'tsne/data/download/{}/{}'.format(job_id, zipfilename)
+	#url = app.config['EXTERNAL_URL_BASE'] + '/tsne/data/download/{}/{}'.format(job_id, zipfilename)
+	# FIXME: make this more generic and not hard coded
+	url = 'http://flowml.mdanderson.edu:5000/tsne/data/download/{}/{}'.format(job_id, zipbasename)
 	msg.body = ('Congradulations, your t-SNE run has completed.'
 			'You may download the results at: ' + url)
 	mail.send(msg)	
@@ -261,17 +281,24 @@ class EmailRegistrationForm(Form):
 @app.route("/tsne/data/download/<session_id>/tsne.zip")
 def download_tsne(session_id):
 	# see: https://stackoverflow.com/questions/5410255/preferred-method-for-downloading-a-file-generated-on-the-fly-in-flask
-	response = make_response()
-	response.headers['Cache-Control'] = 'no-cache'
-	response.headers['Content-Type'] = 'application/zip'
-	response.headers['X-Accel-Redirect'] = url_for('download_tsne', session_id = session_id)
+	# https://stackoverflow.com/questions/23354314/python-flask-downloading-a-file-returns-0-bytes
+	# https://flask.readthedocs.org/en/latest/api/#flask.send_from_directory
+	#return send_from_director('tsne/data/download/{}/'.format(session_id), 'tsne.zip', as_attachment = True)
+
+	with open('/Users/jhokanson/SVN/FlowML-Server/tsne/data/download/{}/tsne.zip'.format(session_id), 'r') as f:
+		body = f.read()
+		response = make_response(body)
+		response.headers['Cache-Control'] = 'no-cache'
+		response.headers['Content-Type'] = 'application/zip'
+		#response.headers['X-Accel-Redirect'] = url_for('download_tsne', session_id = session_id)
 	return response
-	
+
 
 @app.route("/tsne/<session_id>/run-tsne", methods = ['POST', 'GET'])
 def run_tsne(session_id):
 	"""Run t-SNE
 	"""
+	app.logger.setLevel(logging.INFO)
 	error = None
 	form = EmailRegistrationForm(request.form)
 	if request.method == 'POST' and form.validate():
@@ -321,15 +348,16 @@ if __name__ == "__main__":
 
 	# Setup logging functionality as per
 	# https://gist.github.com/ibeex/3257877
-	handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount = 1)
-	handler.setLevel(logging.INFO)
+	handler = RotatingFileHandler('app.log', maxBytes=1000000, backupCount = 1)
+	handler.setLevel(logging.DEBUG)
 	app.logger.addHandler(handler)
 	
 
 	# local test
-	deploy_bad = False
+	deploy_bad = True
 	if deploy_bad:
-		app.run(host = '0.0.0.0', port = 5000, debug = False)
+		app.config['EXTERNAL_URL_BASE'] = app.config['EXTERNAL_URL_BASE']+':{}'.format(port)
+		app.run(host = '0.0.0.0', port = port, debug = False)
 	else:
 		app.run(host='localhost', port=port, debug=True)
 
