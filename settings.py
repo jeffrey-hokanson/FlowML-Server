@@ -3,7 +3,7 @@ CELERY_BROKER_URL = 'amqp://'
 CELERY_RESULT_BACKEND = 'amqp://'
 UPLOAD_FOLDER = 'data/'
 THUMBNAIL_FOLDER = 'data/thumbnail'
-MAX_CONTENT_LENGTH = 50 * 1024 * 1024
+MAX_CONTENT_LENGTH = 200 * 1024 * 1024
 TSNE_ROOT = 'tsne/data/'
 # Email settings
 MAIL_SERVER = 'smtp.googlemail.com'
