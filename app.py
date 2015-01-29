@@ -306,7 +306,7 @@ def download_tsne(session_id):
 	# https://flask.readthedocs.org/en/latest/api/#flask.send_from_directory
 	#return send_from_director('tsne/data/download/{}/'.format(session_id), 'tsne.zip', as_attachment = True)
 
-	with open(join(root_dir,'tsne/data/download/{}/tsne.zip'.format(session_id), 'r') as f:
+	with open(join(root_dir,'tsne/data/download/{}/tsne.zip'.format(session_id)), 'r') as f:
 		body = f.read()
 		response = make_response(body)
 		response.headers['Cache-Control'] = 'no-cache'
