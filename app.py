@@ -51,6 +51,8 @@ from lib.upload_file import uploadfile
 import settings
 
 import flowml as fml
+import numpy as np
+
 
 
 root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -238,7 +240,7 @@ def get_file(session_id, filename):
 @celery.task(name='tasks.batch_tsne')
 def batch_tsne(fnames, email, job_id):
 	app.logger.setLevel(logging.INFO)
-	sample = int(5e4)
+	sample = int(2e4)
 	fdarray = []
 	for fname in fnames:
 		fdarray.append(fml.FlowData(fname))
@@ -266,6 +268,20 @@ def batch_tsne(fnames, email, job_id):
 				#zipf.write(os.path.join(root,file), compress_type = compression)
 				zipf.write(join(path,f), arcname = f, compress_type = compression)
 				app.logger.info("JOB {}: file {} written".format(job_id,f))
+
+	# If we have more than one file, include a combined file 
+	if len(fdarray) > 1:
+		f_order = open(join(path,'file_number.txt'), 'w')
+		for j, fd in enumerate(fdarray):
+			fd['file_number'] = (j+1)*np.ones((fd.shape[0],))
+			name = os.path.split(fnames[j])[1]
+			f_order.write('#%02d : %s\n' % (j+1, name))
+		merged_fd = fml.concat(fdarray)
+		merged_fd.fcs_export(join(path,'merged.fcs'))
+		f_order.close()
+		zipf.write(join(path,'merged.fcs'), arcname = 'merged.fcs', compress_type = compression)
+		zipf.write(join(path,'file_number.txt'), arcname = 'file_number.txt', compress_type = compression)
+
 	zipf.close()
 	app.logger.info("JOB {}: Zip file written".format(job_id))
 
@@ -275,7 +291,8 @@ def batch_tsne(fnames, email, job_id):
 	# FIXME: make this more generic and not hard coded
 	url = 'http://flowml.mdanderson.edu:5000/tsne/data/download/{}/{}'.format(job_id, zipbasename)
 	msg.body = ('Congradulations, your t-SNE run has completed.'
-			'You may download the results at: ' + url)
+			'You may download the results at: ' + url + ' '
+			'If you have encoutered problems, please email jhokanson@mdanderson.org.')
 	mail.send(msg)	
 	app.logger.info('Job: {} COMPLETE!'.format(job_id))
 
