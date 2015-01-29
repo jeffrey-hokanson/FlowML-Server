@@ -236,7 +236,7 @@ def get_file(session_id, filename):
 @celery.task(name='tasks.batch_tsne')
 def batch_tsne(fnames, email, job_id):
 	app.logger.setLevel(logging.INFO)
-	sample = int(5e4)
+	sample = int(2e4)
 	fdarray = []
 	for fname in fnames:
 		fdarray.append(fml.FlowData(fname))
